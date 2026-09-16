@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Scheduler Control</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --success: #4ade80;
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, sans-serif;
+            background: linear-gradient(180deg, #0b1220, var(--bg));
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1rem 3rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            margin: 0 0 0.35rem;
+            font-size: 1.75rem;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+        }
+
+        .card h2 {
+            margin: 0 0 0.75rem;
+            font-size: 1rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.success { background: rgba(74, 222, 128, 0.15); color: var(--success); }
+        .badge.fail { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+        .badge.neutral { background: rgba(148, 163, 184, 0.15); color: var(--muted); }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        button, input {
+            font: inherit;
+        }
+
+        button {
+            background: var(--accent);
+            color: #082f49;
+            border: none;
+            border-radius: 8px;
+            padding: 0.65rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            background: #334155;
+            color: var(--text);
+        }
+
+        button.danger {
+            background: rgba(248, 113, 113, 0.2);
+            color: var(--danger);
+        }
+
+        button.success {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--success);
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        input[type="number"] {
+            width: 110px;
+            padding: 0.55rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #0f172a;
+            color: var(--text);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.65rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        th { color: var(--muted); font-weight: 600; }
+
+        .message {
+            margin-top: 0.75rem;
+            padding: 0.75rem 0.9rem;
+            border-radius: 8px;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            display: none;
+        }
+
+        .countries-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .countries-list li {
+            padding: 0.45rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .countries-list li:last-child { border-bottom: none; }
+
+        .empty {
+            color: var(--muted);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div>
+            <h1>Country Scheduler Control</h1>
+            <p class="subtitle">Quartz.NET job runs every 2 minutes and prints 3 countries to the console.</p>
+        </div>
+        <div class="links">
+            <a href="/quartz" target="_blank">Quartz Dashboard</a>
+            <a href="/quartz-api" target="_blank">Quartz API</a>
+        </div>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Trigger Status</h2>
+            <div class="stat" id="triggerState">—</div>
+            <p class="subtitle" id="nextFire">Next fire: —</p>
+            <p class="subtitle" id="retryPolicy">Retry policy: —</p>
+        </div>
+        <div class="card">
+            <h2>Latest Run</h2>
+            <div id="latestStatus"><span class="badge neutral">No runs yet</span></div>
+            <p class="subtitle" id="latestMessage">Waiting for first execution…</p>
+        </div>
+        <div class="card">
+            <h2>Local Country Data</h2>
+            <ul class="countries-list" id="countriesList">
+                <li class="empty">Loading…</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1rem;">
+        <h2>Controls</h2>
+        <div class="controls">
+            <button id="triggerBtn">Trigger Now</button>
+            <button class="danger" id="failOnBtn">Simulate Failure ON</button>
+            <button class="success" id="failOffBtn">Simulate Failure OFF</button>
+            <label>
+                Max Retries
+                <input type="number" id="maxAttempts" min="0" max="10" value="3">
+            </label>
+            <label>
+                Retry Delay (sec)
+                <input type="number" id="delaySeconds" min="1" max="3600" value="30">
+            </label>
+            <button class="secondary" id="retryBtn">Update Retry Policy</button>
+        </div>
+        <div class="message" id="message"></div>
+    </div>
+
+    <div class="card">
+        <h2>Execution History</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Time (UTC)</th>
+                <th>Status</th>
+                <th>Retry</th>
+                <th>Trigger</th>
+                <th>Message / Why Failed</th>
+            </tr>
+            </thead>
+            <tbody id="historyBody">
+            <tr><td colspan="5" class="empty">No history yet</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const messageEl = document.getElementById('message');
+
+    function showMessage(text) {
+        messageEl.textContent = text;
+        messageEl.style.display = 'block';
+        setTimeout(() => messageEl.style.display = 'none', 4000);
+    }
+
+    async function loadCountries() {
+        const res = await fetch('/api/countries');
+        const countries = await res.json();
+        const list = document.getElementById('countriesList');
+        list.innerHTML = countries.map(c =>
+            `<li><strong>${c.code}</strong> ${c.name} — ${c.capital} (${c.population.toLocaleString()})</li>`
+        ).join('');
+    }
+
+    async function loadStatus() {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+
+        document.getElementById('triggerState').textContent = data.trigger.state;
+        document.getElementById('nextFire').textContent =
+            'Next fire: ' + (data.trigger.nextFireTimeUtc ? new Date(data.trigger.nextFireTimeUtc).toLocaleString() : '—');
+        document.getElementById('retryPolicy').textContent = 'Retry policy: ' + data.trigger.retryPolicy;
+
+        const latest = data.latestExecution;
+        const latestStatus = document.getElementById('latestStatus');
+        const latestMessage = document.getElementById('latestMessage');
+
+        if (!latest) {
+            latestStatus.innerHTML = '<span class="badge neutral">No runs yet</span>';
+            latestMessage.textContent = 'Waiting for first execution…';
+        } else {
+            latestStatus.innerHTML = latest.success
+                ? '<span class="badge success">Success</span>'
+                : '<span class="badge fail">Failed</span>';
+            latestMessage.textContent = latest.message;
+        }
+    }
+
+    async function loadHistory() {
+        const res = await fetch('/api/executions?count=20');
+        const history = await res.json();
+        const body = document.getElementById('historyBody');
+
+        if (!history.length) {
+            body.innerHTML = '<tr><td colspan="5" class="empty">No history yet</td></tr>';
+            return;
+        }
+
+        body.innerHTML = history.map(item => `
+            <tr>
+                <td>${new Date(item.executedAt).toLocaleString()}</td>
+                <td>${item.success
+                    ? '<span class="badge success">Success</span>'
+                    : '<span class="badge fail">Failed</span>'}</td>
+                <td>${item.retryAttempt}</td>
+                <td>${item.triggerSource}</td>
+                <td>${item.message}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function refreshAll() {
+        await Promise.all([loadCountries(), loadStatus(), loadHistory()]);
+    }
+
+    document.getElementById('triggerBtn').addEventListener('click', async () => {
+        const res = await fetch('/api/trigger', { method: 'POST' });
+        const data = await res.json();
+        showMessage(data.message);
+        setTimeout(refreshAll, 1000);
+    });
+
+    document.getElementById('failOnBtn').addEventListener('click', async () => {
+        const res = await fetch('/api/simulate-failure?enabled=true', { method: 'POST' });
+        const data = await res.json();
+        showMessage(data.message);
+        await refreshAll();
+    });
+
+    document.getElementById('failOffBtn').addEventListener('click', async () => {
+        const res = await fetch('/api/simulate-failure?enabled=false', { method: 'POST' });
+        const data = await res.json();
+        showMessage(data.message);
+        await refreshAll();
+    });
+
+    document.getElementById('retryBtn').addEventListener('click', async () => {
+        const maxAttempts = Number(document.getElementById('maxAttempts').value);
+        const delaySeconds = Number(document.getElementById('delaySeconds').value);
+        const res = await fetch('/api/retry-policy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ maxAttempts, delaySeconds })
+        });
+        const data = await res.json();
+        showMessage(data.message ?? 'Updated');
+        await refreshAll();
+    });
+
+    refreshAll();
+    setInterval(refreshAll, 5000);
+</script>
+</body>
+</html>

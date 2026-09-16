@@ -1,0 +1,5 @@
+[
+  { "Code": "MM", "Name": "Myanmar", "Capital": "Naypyidaw", "Population": 54400000 },
+  { "Code": "TH", "Name": "Thailand", "Capital": "Bangkok", "Population": 70000000 },
+  { "Code": "JP", "Name": "Japan", "Capital": "Tokyo", "Population": 125000000 }
+]
